@@ -3049,23 +3049,23 @@ static struct config_string ConfigureNamesString[] =
 	},
 
 	{
-		{"log_destination", PGC_SIGHUP, DEFUNCT_OPTIONS,
+		{"log_destination", PGC_SIGHUP, LOGGING_WHERE,
 			gettext_noop("Defunct: Sets the destination for server log output."),
 			gettext_noop("Valid values are combinations of \"stderr\", "
 						 "\"syslog\", \"csvlog\", and \"eventlog\", "
 						 "depending on the platform."),
-			GUC_LIST_INPUT | GUC_NO_SHOW_ALL
+                        GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
 		},
 		&Log_destination_string,
 		"stderr",
 		check_log_destination, assign_log_destination, NULL
 	},
 	{
-		{"log_directory", PGC_SIGHUP, DEFUNCT_OPTIONS,
+		{"log_directory", PGC_SIGHUP, LOGGING_WHERE,
 			gettext_noop("Defunct: Sets the destination directory for log files."),
 			gettext_noop("Can be specified as relative to the data directory "
 						 "or as absolute path."),
-			GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL
+			GUC_SUPERUSER_ONLY
 		},
 		&Log_directory,
 		"pg_log",
@@ -3083,14 +3083,14 @@ static struct config_string ConfigureNamesString[] =
 	},
 
 	{
-		{"syslog_ident", PGC_SIGHUP, DEFUNCT_OPTIONS,
+		{"syslog_ident", PGC_SIGHUP, LOGGING_WHERE,
 			gettext_noop("Sets the program name used to identify PostgreSQL "
 						 "messages in syslog."),
 			NULL,
-			GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
+                        GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
 		},
 		&syslog_ident_str,
-		"postgres",
+		"greenplum", 
 		NULL, assign_syslog_ident, NULL
 	},
 
@@ -3482,11 +3482,11 @@ static struct config_enum ConfigureNamesEnum[] =
 	},
 
 	{
-		{"syslog_facility", PGC_SIGHUP, DEFUNCT_OPTIONS,
+		{"syslog_facility", PGC_SIGHUP, LOGGING_WHAT,
 			gettext_noop("Sets the syslog \"facility\" to be used when syslog enabled."),
 			gettext_noop("Valid values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, "
 						 "LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
-			GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
+			GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
 		},
 		&syslog_facility,
 #ifdef HAVE_SYSLOG
