@@ -3054,7 +3054,7 @@ static struct config_string ConfigureNamesString[] =
 			gettext_noop("Valid values are combinations of \"stderr\", "
 						 "\"syslog\", \"csvlog\", and \"eventlog\", "
 						 "depending on the platform."),
-                        GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
+                        GUC_LIST_INPUT | GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
 		},
 		&Log_destination_string,
 		"stderr",
