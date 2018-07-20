@@ -2188,7 +2188,7 @@ GRANT SELECT ON gp_toolkit.gp_workfile_mgr_used_diskspace TO public;
 CREATE TYPE gp_toolkit.gp_stat_database_t
 AS
 (
-  dbseg int,
+  gp_segment_id int,
   datid oid,
   datname name,
   numbackends int,
@@ -2267,7 +2267,7 @@ SELECT * from gp_toolkit.__gp_stat_database_on_master();
 CREATE TYPE gp_toolkit.gp_stat_all_tables_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  relid oid,
  schemaname name,
  relname name,
@@ -2351,7 +2351,7 @@ SELECT * from gp_toolkit.__gp_stat_all_tables_on_master();
 CREATE TYPE gp_toolkit.gp_statio_all_tables_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  relid oid,
  schemaname name,
  relname name,
@@ -2429,7 +2429,7 @@ SELECT * from gp_toolkit.__gp_statio_all_tables_on_master();
 CREATE TYPE gp_toolkit.gp_stat_replication_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  procpid integer,
  usesysid oid,
  usename name,
@@ -2510,7 +2510,7 @@ SELECT * from gp_toolkit.__gp_stat_replication_on_master();
 CREATE TYPE gp_toolkit.gp_stat_bgwriter_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  checkpoints_timed bigint,
  checkpoints_req bigint,
  buffers_checkpoint bigint,
@@ -2584,7 +2584,7 @@ SELECT * from gp_toolkit.__gp_stat_bgwriter_on_master();
 CREATE TYPE gp_toolkit.gp_stat_all_indexes_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  relid oid,
  indexrelid oid,
  schemaname name,
@@ -2659,7 +2659,7 @@ SELECT * from gp_toolkit.__gp_stat_all_indexes_on_master();
 CREATE TYPE gp_toolkit.gp_statio_all_indexes_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  relid oid,
  indexrelid oid,
  schemaname name,
@@ -2734,7 +2734,7 @@ SELECT * from gp_toolkit.__gp_statio_all_indexes_on_master();
 CREATE TYPE gp_toolkit.gp_statio_all_sequences_t
 AS
 (
- dbseg int,
+ gp_segment_id int,
  relid oid,
  schemaname name,
  relname name,
