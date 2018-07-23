@@ -3050,11 +3050,11 @@ static struct config_string ConfigureNamesString[] =
 
 	{
 		{"log_destination", PGC_SIGHUP, LOGGING_WHERE,
-			gettext_noop("Defunct: Sets the destination for server log output."),
+			gettext_noop("Sets the destination for server log output."),
 			gettext_noop("Valid values are combinations of \"stderr\", "
 						 "\"syslog\", \"csvlog\", and \"eventlog\", "
 						 "depending on the platform."),
-                        GUC_LIST_INPUT | GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
+                        GUC_LIST_INPUT
 		},
 		&Log_destination_string,
 		"stderr",
@@ -3062,7 +3062,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{"log_directory", PGC_SIGHUP, LOGGING_WHERE,
-			gettext_noop("Defunct: Sets the destination directory for log files."),
+			gettext_noop("Sets the destination directory for log files."),
 			gettext_noop("Can be specified as relative to the data directory "
 						 "or as absolute path."),
 			GUC_SUPERUSER_ONLY
@@ -3084,7 +3084,7 @@ static struct config_string ConfigureNamesString[] =
 
 	{
 		{"syslog_ident", PGC_SIGHUP, LOGGING_WHERE,
-			gettext_noop("Sets the program name used to identify PostgreSQL "
+			gettext_noop("Sets the program name used to identify Greenplum "
 						 "messages in syslog."),
 			NULL,
                         GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
@@ -3482,11 +3482,9 @@ static struct config_enum ConfigureNamesEnum[] =
 	},
 
 	{
-		{"syslog_facility", PGC_SIGHUP, LOGGING_WHAT,
+		{"syslog_facility", PGC_SIGHUP, LOGGING_WHERE,
 			gettext_noop("Sets the syslog \"facility\" to be used when syslog enabled."),
-			gettext_noop("Valid values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, "
-						 "LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
-			GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
+                        NULL
 		},
 		&syslog_facility,
 #ifdef HAVE_SYSLOG
@@ -9538,7 +9536,7 @@ static void
 assign_syslog_facility(int newval, void *extra)
 {
 #ifdef HAVE_SYSLOG
-	set_syslog_parameters(syslog_ident_str ? syslog_ident_str : "postgres",
+	set_syslog_parameters(syslog_ident_str ? syslog_ident_str : "greenplum",
 						  newval);
 #endif
 	/* Without syslog support, just ignore it */
