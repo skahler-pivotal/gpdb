@@ -156,6 +156,8 @@ int			Log_error_verbosity = PGERROR_VERBOSE;
 char	   *Log_line_prefix = NULL;		/* format for extra log line info */
 int			Log_destination = LOG_DESTINATION_STDERR;
 char	   *Log_destination_string = NULL;
+bool		syslog_sequence_numbers = true;
+bool		syslog_split_messages = true;
 
 #ifdef HAVE_SYSLOG
 

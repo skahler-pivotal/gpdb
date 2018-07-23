@@ -1382,8 +1382,8 @@ PostmasterMain(int argc, char *argv[])
 	if (!(Log_destination & LOG_DESTINATION_STDERR))
 		ereport(LOG,
 				(errmsg("ending log output to stderr"),
-			  errhint("Future log output will go to log destination \"%s\".",
-					  Log_destination_string)));
+				 errhint("Future log output will go to log destination \"%s\".",
+						 Log_destination_string)));
 
 	whereToSendOutput = DestNone;
 
