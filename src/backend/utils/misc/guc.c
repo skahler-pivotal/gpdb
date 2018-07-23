@@ -3075,7 +3075,7 @@ static struct config_string ConfigureNamesString[] =
 		{"log_filename", PGC_SIGHUP, LOGGING_WHERE,
 			gettext_noop("Sets the file name pattern for log files."),
 			NULL,
-			GUC_SUPERUSER_ONLY | GUC_NO_SHOW_ALL | GUC_NOT_IN_SAMPLE
+			GUC_SUPERUSER_ONLY
 		},
 		&Log_filename,
 		"gpdb-%Y-%m-%d_%H%M%S.csv",
