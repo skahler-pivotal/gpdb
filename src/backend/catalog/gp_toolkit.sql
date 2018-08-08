@@ -2200,7 +2200,13 @@ AS
   tup_fetched bigint,
   tup_inserted bigint,
   tup_updated bigint,
-  tup_deleted bigint
+  tup_deleted bigint,
+  conficts bigint,
+  temp_files bigint,
+  deadlocks bigint,
+  blk_read_time double precision,
+  blk_write_time double precision,
+  stats_reset timestamp with time zone
 );
 
 --------------------------------------------------------------------------------
@@ -2217,7 +2223,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_database_on_segments()
 RETURNS SETOF gp_toolkit.gp_stat_database_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_database;
+    SELECT gp_execution_segment(), datid, datname, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conficts, temp_files, deadlocks, blk_read_time, blk_write_time, stats_reset FROM pg_stat_database;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2235,7 +2241,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_database_on_master()
 RETURNS SETOF gp_toolkit.gp_stat_database_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_database;
+    SELECT gp_execution_segment(), datid, datname, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conficts, temp_files, deadlocks, blk_read_time, blk_write_time, stats_reset FROM pg_stat_database;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2251,9 +2257,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_stat_database
 AS
-SELECT * from gp_toolkit.__gp_stat_database_on_segments()
+SELECT gp_segment_id, datid, datname, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conficts, temp_files, deadlocks, blk_read_time, blk_write_time, stats_reset from gp_toolkit.__gp_stat_database_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_stat_database_on_master();
+SELECT gp_segment_id, datid, datname, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conficts, temp_files, deadlocks, blk_read_time, blk_write_time, stats_reset from gp_toolkit.__gp_stat_database_on_master();
 
 --------------------------------------------------------------------------------
 -- @type:
@@ -2284,7 +2290,11 @@ AS
  last_vacuum timestamp with time zone,
  last_autovacuum timestamp with time zone,
  last_analyze timestamp with time zone,
- last_autoanalyze timestamp with time zone
+ last_autoanalyze timestamp with time zone,
+ vacuum_count bigint,
+ autovacuum_count bigint,
+ analyze_count bigint,
+ autoanalyze_count bigint
 );
 
 --------------------------------------------------------------------------------
@@ -2301,7 +2311,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_all_tables_on_segments()
 RETURNS SETOF gp_toolkit.gp_stat_all_tables_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_all_tables;
+    SELECT gp_execution_segment(), relid, schemaname, relname, seq_scan, seq_tup_read, idx_scan, idx_tup_fetch, n_tup_ins, n_tup_upd, n_tup_del, n_tup_hot_upd, n_live_tup, n_dead_tup, last_vacuum, last_autovacuum, last_analyze, last_autoanalyze, vacuum_count, autovacuum_count, analyze_count, autoanalyze_count FROM pg_stat_all_tables;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2319,7 +2329,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_all_tables_on_master()
 RETURNS SETOF gp_toolkit.gp_stat_all_tables_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_all_tables;
+    SELECT gp_execution_segment(), relid, schemaname, relname, seq_scan, seq_tup_read, idx_scan, idx_tup_fetch, n_tup_ins, n_tup_upd, n_tup_del, n_tup_hot_upd, n_live_tup, n_dead_tup, last_vacuum, last_autovacuum, last_analyze, last_autoanalyze, vacuum_count, autovacuum_count, analyze_count, autoanalyze_count FROM pg_stat_all_tables;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2335,9 +2345,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_stat_all_tables
 AS
-SELECT * from gp_toolkit.__gp_stat_all_tables_on_segments()
+SELECT gp_segment_id, relid, schemaname, relname, seq_scan, seq_tup_read, idx_scan, idx_tup_fetch, n_tup_ins, n_tup_upd, n_tup_del, n_tup_hot_upd, n_live_tup, n_dead_tup, last_vacuum, last_autovacuum, last_analyze, last_autoanalyze, vacuum_count, autovacuum_count, analyze_count, autoanalyze_count from gp_toolkit.__gp_stat_all_tables_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_stat_all_tables_on_master();
+SELECT gp_segment_id, relid, schemaname, relname, seq_scan, seq_tup_read, idx_scan, idx_tup_fetch, n_tup_ins, n_tup_upd, n_tup_del, n_tup_hot_upd, n_live_tup, n_dead_tup, last_vacuum, last_autovacuum, last_analyze, last_autoanalyze, vacuum_count, autovacuum_count, analyze_count, autoanalyze_count from gp_toolkit.__gp_stat_all_tables_on_master();
 
 --------------------------------------------------------------------------------
 -- @type:
@@ -2379,7 +2389,7 @@ CREATE FUNCTION gp_toolkit.__gp_statio_all_tables_on_segments()
 RETURNS SETOF gp_toolkit.gp_statio_all_tables_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_statio_all_tables;
+    SELECT gp_execution_segment(), relid, schemaname, relname, heap_blks_read, heap_blks_hit, idx_blks_read, idx_blks_hit, toast_blks_read, toast_blks_hit, tidx_blks_read, tidx_blks_hit FROM pg_statio_all_tables;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2397,7 +2407,7 @@ CREATE FUNCTION gp_toolkit.__gp_statio_all_tables_on_master()
 RETURNS SETOF gp_toolkit.gp_statio_all_tables_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_statio_all_tables;
+    SELECT gp_execution_segment(), relid, schemaname, relname, heap_blks_read, heap_blks_hit, idx_blks_read, idx_blks_hit, toast_blks_read, toast_blks_hit, tidx_blks_read, tidx_blks_hit FROM pg_statio_all_tables;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2413,9 +2423,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_statio_all_tables
 AS
-SELECT * from gp_toolkit.__gp_statio_all_tables_on_segments()
+SELECT gp_segment_id, relid, schemaname, relname, heap_blks_read, heap_blks_hit, idx_blks_read, idx_blks_hit, toast_blks_read, toast_blks_hit, tidx_blks_read, tidx_blks_hit from gp_toolkit.__gp_statio_all_tables_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_statio_all_tables_on_master();
+SELECT gp_segement_id, relid, schemaname, relname, heap_blks_read, heap_blks_hit, idx_blks_read, idx_blks_hit, toast_blks_read, toast_blks_hit, tidx_blks_read, tidx_blks_hit from gp_toolkit.__gp_statio_all_tables_on_master();
 
 --------------------------------------------------------------------------------
 -- @type:
@@ -2430,11 +2440,12 @@ CREATE TYPE gp_toolkit.gp_stat_replication_t
 AS
 (
  gp_segment_id int,
- procpid integer,
+ pid integer,
  usesysid oid,
  usename name,
  application_name text,
  client_addr inet,
+ client_hostname text,
  client_port integer,
  backend_start timestamp with time zone,
  state text,
@@ -2460,7 +2471,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_replication_on_segments()
 RETURNS SETOF gp_toolkit.gp_stat_replication_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_replication;
+    SELECT gp_execution_segment(), pid, usesysid, usename, application_name, client_addr, client_hostname, client_port, backend_start, state, sent_location, write_location, flush_location, replay_location, sync_priority, sync_state FROM pg_stat_replication;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2478,7 +2489,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_replication_on_master()
 RETURNS SETOF gp_toolkit.gp_stat_replication_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_replication;
+    SELECT gp_execution_segment(), pid, usesysid, usename, application_name, client_addr, client_hostname, client_port, backend_start, state, sent_location, write_location, flush_location, replay_location, sync_priority, sync_state FROM pg_stat_replication;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2494,9 +2505,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_stat_replication
 AS
-SELECT * from gp_toolkit.__gp_stat_replication_on_segments()
+SELECT gp_segment_id, pid, usesysid, usename, application_name, client_addr, client_hostname, client_port, backend_start, state, sent_location, write_location, flush_location, replay_location, sync_priority, sync_state from gp_toolkit.__gp_stat_replication_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_stat_replication_on_master();
+SELECT gp_segment_id, pid, usesysid, usename, application_name, client_addr, client_hostname, client_port, backend_start, state, sent_location, write_location, flush_location, replay_location, sync_priority, sync_state from gp_toolkit.__gp_stat_replication_on_master();
 
 --------------------------------------------------------------------------------
 -- @type:
@@ -2513,11 +2524,14 @@ AS
  gp_segment_id int,
  checkpoints_timed bigint,
  checkpoints_req bigint,
+ checkpoint_write_time double precision,
+ checkpoint_sync_time double precision,
  buffers_checkpoint bigint,
  buffers_clean bigint,
  maxwritten_clean bigint,
  buffers_backend bigint,
- buffers_alloc bigint
+ buffers_alloc bigint,
+ stats_reset timestamp with time zone
 );
 
 --------------------------------------------------------------------------------
@@ -2534,7 +2548,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_bgwriter_on_segments()
 RETURNS SETOF gp_toolkit.gp_stat_bgwriter_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_bgwriter;
+    SELECT gp_execution_segment(), checkpoints_timed, checkpoints_req, checkpoint_write_time, checkpoint_sync_time, buffers_checkpoint, buffers_clean, maxwritten_clean, buffers_backend, buffers_alloc, stats_reset FROM pg_stat_bgwriter;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2552,7 +2566,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_bgwriter_on_master()
 RETURNS SETOF gp_toolkit.gp_stat_bgwriter_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_bgwriter;
+    SELECT gp_execution_segment(), checkpoints_timed, checkpoints_req, checkpoint_write_time, checkpoint_sync_time, buffers_checkpoint, buffers_clean, maxwritten_clean, buffers_backend, buffers_alloc, stats_reset FROM pg_stat_bgwriter;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2568,9 +2582,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_stat_bgwriter
 AS
-SELECT * from gp_toolkit.__gp_stat_bgwriter_on_segments()
+SELECT gp_segment_id, checkpoints_timed, checkpoints_req, checkpoint_write_time, checkpoint_sync_time, buffers_checkpoint, buffers_clean, maxwritten_clean, buffers_backend, buffers_alloc, stats_reset from gp_toolkit.__gp_stat_bgwriter_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_stat_bgwriter_on_master();
+SELECT gp_segment_id, checkpoints_timed, checkpoints_req, checkpoint_write_time, checkpoint_sync_time, buffers_checkpoint, buffers_clean, maxwritten_clean, buffers_backend, buffers_alloc, stats_reset from gp_toolkit.__gp_stat_bgwriter_on_master();
 
 --------------------------------------------------------------------------------
 -- @type:
@@ -2609,7 +2623,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_all_indexes_on_segments()
 RETURNS SETOF gp_toolkit.gp_stat_all_indexes_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_all_indexes;
+    SELECT gp_execution_segment(), relid, indexrelid, schemaname, relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch FROM pg_stat_all_indexes;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2627,7 +2641,7 @@ CREATE FUNCTION gp_toolkit.__gp_stat_all_indexes_on_master()
 RETURNS SETOF gp_toolkit.gp_stat_all_indexes_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_stat_all_indexes;
+    SELECT gp_execution_segment(), indexrelid, schemaname, relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch FROM pg_stat_all_indexes;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2643,9 +2657,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_stat_all_indexes
 AS
-SELECT * from gp_toolkit.__gp_stat_all_indexes_on_segments()
+SELECT gp_segment_id, indexrelid, schemaname, relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch from gp_toolkit.__gp_stat_all_indexes_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_stat_all_indexes_on_master();
+SELECT gp_segment_id, indexrelid, schemaname, relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch from gp_toolkit.__gp_stat_all_indexes_on_master();
 
 --------------------------------------------------------------------------------
 -- @type:
@@ -2683,7 +2697,7 @@ CREATE FUNCTION gp_toolkit.__gp_statio_all_indexes_on_segments()
 RETURNS SETOF gp_toolkit.gp_statio_all_indexes_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_statio_all_indexes;
+    SELECT gp_execution_segment(), relid, indexrelid, schemaname, relname, indexrelname, idx_blks_read, idx_blks_hit FROM pg_statio_all_indexes;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2701,7 +2715,7 @@ CREATE FUNCTION gp_toolkit.__gp_statio_all_indexes_on_master()
 RETURNS SETOF gp_toolkit.gp_statio_all_indexes_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_statio_all_indexes;
+    SELECT gp_execution_segment(), relid, indexrelid, schemaname, relname, indexrelname, idx_blks_read, idx_blks_hit FROM pg_statio_all_indexes;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2717,9 +2731,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_statio_all_indexes
 AS
-SELECT * from gp_toolkit.__gp_statio_all_indexes_on_segments()
+SELECT gp_segment_id, relid, indexrelid, schemaname, relname, indexrelname, idx_blks_read, idx_blks_hit from gp_toolkit.__gp_statio_all_indexes_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_statio_all_indexes_on_master();
+SELECT gp_segment_id, relid, indexrelid, schemaname, relname, indexrelname, idx_blks_read, idx_blks_hit from gp_toolkit.__gp_statio_all_indexes_on_master();
 
 
 --------------------------------------------------------------------------------
@@ -2756,7 +2770,7 @@ CREATE FUNCTION gp_toolkit.__gp_statio_all_sequences_on_segments()
 RETURNS SETOF gp_toolkit.gp_statio_all_sequences_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_statio_all_sequences;
+    SELECT gp_execution_segment(), relid, schemaname, relname, blks_read, blks_hit FROM pg_statio_all_sequences;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON ALL SEGMENTS CONTAINS SQL;
 
@@ -2774,7 +2788,7 @@ CREATE FUNCTION gp_toolkit.__gp_statio_all_sequences_on_master()
 RETURNS SETOF gp_toolkit.gp_statio_all_sequences_t
 AS
 $$
-    SELECT gp_execution_segment(), * FROM pg_statio_all_sequences;
+    SELECT gp_execution_segment(), relid, schemaname, relname, blks_read, blks_hit FROM pg_statio_all_sequences;
 $$
 LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
@@ -2790,9 +2804,9 @@ LANGUAGE SQL VOLATILE EXECUTE ON MASTER CONTAINS SQL;
 
 CREATE VIEW gp_toolkit.gp_statio_all_sequences
 AS
-SELECT * from gp_toolkit.__gp_statio_all_sequences_on_segments()
+SELECT gp_segment_id, relid, schemaname, relname, blks_read, blks_hit FROM gp_toolkit.__gp_statio_all_sequences_on_segments()
 UNION ALL
-SELECT * from gp_toolkit.__gp_statio_all_sequences_on_master();
+SELECT gp_segment_id, relid, schemaname, relname, blks_read, blks_hit FROM gp_toolkit.__gp_statio_all_sequences_on_master();
 
 -- Finalize install
 COMMIT;
