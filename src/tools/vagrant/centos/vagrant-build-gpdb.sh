@@ -12,10 +12,11 @@ popd
 export CC="ccache cc"
 export CXX="ccache c++"
 export PATH=/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 rm -rf /usr/local/gpdb
 pushd ~/gpdb
-  ./configure --prefix=/usr/local/gpdb $@
+  ./configure --prefix=/usr/local/gpdb CFLAGS="-I/usr/local/include/ -L/usr/local/lib/" $@
   make clean
   make -j4 -s && make install
 popd
