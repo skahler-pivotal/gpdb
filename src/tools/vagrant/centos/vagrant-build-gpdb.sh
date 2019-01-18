@@ -1,22 +1,40 @@
 #!/bin/bash
+set -x
 
-set -ex
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --enable-orca)
+      enable_orca="${1}"
+      ;;
+    --build-local)
+      build_local="${1}"
+      ;;
+    *)
+      printf "Error: Unknown Flag: $1\n"
+      printf "Optional Flags: [--build-local] [--enable-orca]\n"
+      exit 1
+  esac
+  shift
+done
 
-# clone the repos
-rm -fr gpdb
 
 pushd ~
-  git clone https://github.com/greenplum-db/gpdb
+if [ -z "$build_local" ]; then
+     rm -fr gpdb
+     git clone https://github.com/greenplum-db/gpdb
+else
+  ln -s /gpdb ~/gpdb
+fi
 popd
 
 export CC="ccache cc"
 export CXX="ccache c++"
 export PATH=/usr/local/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 rm -rf /usr/local/gpdb
 pushd ~/gpdb
-  ./configure --prefix=/usr/local/gpdb CFLAGS="-I/usr/local/include/ -L/usr/local/lib/" $@
+   #need to throw an error handle in here...
+  ./configure --prefix=/usr/local/gpdb $enable_orca
   make clean
   make -j4 -s && make install
 popd
@@ -32,7 +50,7 @@ chmod 600 ~/.ssh/authorized_keys
 echo export LD_LIBRARY_PATH=/usr/local/lib:\$LD_LIBRARY_PATH >> /usr/local/gpdb/greenplum_path.sh
 
 # use gpdemo to start the cluster
-pushd ~/gpdb/gpAux/gpdemo
+pushd $build_path/gpAux/gpdemo
   source /usr/local/gpdb/greenplum_path.sh
   make
 popd

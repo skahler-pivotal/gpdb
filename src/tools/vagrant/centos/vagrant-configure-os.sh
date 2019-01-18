@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -x
 
 # Stop firewall
@@ -56,7 +55,3 @@ sudo bash -c 'printf "* hard core unlimited\n"         >> /etc/security/limits.d
 sudo sed -i '/RemoveIPC=no/d' /etc/systemd/logind.conf
 sudo bash -c 'echo "RemoveIPC=no" >> /etc/systemd/logind.conf'
 sudo service systemd-logind restart
-
-# Ensure libraries end up in path
-sudo bash -c 'echo "/usr/local/lib" >> /etc/ld.so.conf'
-sudo bash -c 'echo "/usr/local/lib64" >> /etc/ld.so.conf'

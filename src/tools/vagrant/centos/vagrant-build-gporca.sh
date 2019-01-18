@@ -21,7 +21,7 @@ pushd ~/gpos
   rm -fr build
   mkdir build
   pushd build
-    cmake3 ../
+    cmake ../
     make -j4 && make install
   popd
 popd
@@ -39,8 +39,7 @@ pushd ~/gporca
   rm -fr build
   mkdir build
   pushd build
-    cmake3 ../
+    cmake ../
     make -j4 && make install
   popd
 popd
-

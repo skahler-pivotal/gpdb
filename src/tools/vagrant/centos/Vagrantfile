@@ -1,40 +1,74 @@
-require 'yaml'
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
 
-# Basic Vagrant config (API version 2)
-Vagrant.configure(2) do |config|
-  # Base box: Centos-7 box
-  # NOTE: Over time the VMI below may become outdated, so may need to be
-  #       substituted with a more recent VMI
-  config.vm.box = "bento/centos-7"
+# INCLUDE
+require "ipaddr"
 
-  config.vm.hostname="gpdbvagrant"
+# VM
+# Using ipaddr, we can manage multiple local images and prevent conflicts
+@vm_os = ENV['VM_OS'] || "bento/centos-7.5"
+@vm_cpus = ENV['VM_CPUS'] || 2
+@vm_memory = ENV['VM_MEMORY'] || 4096
+@vm_hostname = ENV['VM_HOSTNAME'] || "gpdb-vagrant"
+@vm_subnet = ENV['VM_SUBNET'] || "192.168.99.10"
+@vm_ip = IPAddr.new @vm_subnet
 
-  # Give a reasonable amount of cpu and memory to the VM
-  config.vm.provider "virtualbox" do |vb|
-    vb.name = "gpdb-dev-host" # Name in VirtualBox
-    vb.memory = 8192
-    vb.cpus = 4
-    vb.customize ["storagectl", :id, "--name", "SATA Controller", "--hostiocache", "on"]
-    vb.customize ['modifyvm', :id, '--cableconnected1', 'on']
-  end
+# BUILD
+# Vagrant / Ruby doesn't really provide us a nice way of sending flags
+# We could use include and use GetoptLong, but this requires sticking
+# varaiables between vagrant and up
+@build_local = ENV['LOCAL'] || true
+@build_orca = ENV['ORCA'] || true
+@args = []
 
-  if File.file?('vagrant-local.yml')
-    local_config = YAML::load_file('vagrant-local.yml')
-    local_config['synced_folder'].each do |folder|
-      config.vm.synced_folder folder['local'], folder['shared'] unless folder['local'].nil? or folder['shared'].nil?
+# Define a Template for Building All Our VMs.
+# We can leverage this later to handle multiple hosts.
+def build_vm( config, hostname, ip )
+    config.vm.define hostname do |node|
+      node.vm.hostname = hostname
+      node.vm.network :private_network, :ip => ip
+
+      node.vm.provision :hosts do |provisioner|
+         provisioner.autoconfigure = true
+         provisioner.sync_hosts = true
+         provisioner.add_localhost_hostnames = false
+       end
+
+      node.vm.provider :virtualbox do |vb|
+        vb.name = @vm_hostname
+        vb.gui = false
+        vb.cpus = @vm_cpus
+        vb.memory = @vm_memory
+        vb.customize ["storagectl", :id, "--name", "SATA Controller", "--hostiocache", "on"]
+      end
+
     end
+end
+
+# DEPLOY
+Vagrant.configure(2) do |config|
+  config.vm.box = @vm_os
+  config.vm.hostname = @vm_hostname
+
+  # Master Node:
+  puts "Master Hostname: #{@vm_hostname}"
+  puts "Master IP: #{@vm_ip}"
+  build_vm( config, "#{@vm_hostname}", "#{@vm_ip}" )
+
+  if (@build_local == true)
+    config.vm.synced_folder File.expand_path("../../../../", Dir.pwd), "/gpdb"
+    @args.push("--build-local")
   end
 
-  config.vm.define("gpdb") do |gpdb|
-    gpdb.vm.provision "shell", path: "vagrant-setup.sh"
-    gpdb.vm.provision "shell", path: "vagrant-configure-os.sh"
-    gpdb.vm.provision "shell", path: "vagrant-build-gporca.sh", privileged: false
-    gpdb.vm.provision "shell", path: "vagrant-build-gpdb.sh", privileged: false, args: "--enable-orca"
+  config.vm.provision "shell", path: "vagrant-setup.sh"
+  config.vm.provision "shell", path: "vagrant-configure-os.sh"
+
+  if (@build_orca == true)
+    config.vm.provision "shell", path: "vagrant-build-gporca.sh", privileged: false
+    @args.push("--enable-orca")
   end
 
-  #config.vm.define("gpdb_without_gporca") do |gpdb_without_gporca|
-  #  gpdb_without_gporca.vm.provision "shell", path: "vagrant-setup.sh"
-  #  gpdb_without_gporca.vm.provision "shell", path: "vagrant-configure-os.sh"
-  #  gpdb_without_gporca.vm.provision "shell", path: "vagrant-build-gpdb.sh", privileged: false
-  #end
+  puts "Build Options: #{@args.join(" ")}"
+  config.vm.provision "shell", path: "vagrant-build-gpdb.sh", privileged: false, args: "#{@args.join(" ")}"
+
 end
