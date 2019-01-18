@@ -63,6 +63,19 @@ sudo chown -R vagrant:vagrant /usr/local
 sudo bash -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf'
 sudo bash -c 'ldconfig'
 
+# Setup alteratives for cmake, using cmake3 by default
+sudo bash -c 'alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 \
+--slave /usr/local/bin/ctest ctest /usr/bin/ctest \
+--slave /usr/local/bin/cpack cpack /usr/bin/cpack \
+--slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake \
+--family cmake'
+
+sudo bash -c 'alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 \
+--slave /usr/local/bin/ctest ctest /usr/bin/ctest3 \
+--slave /usr/local/bin/cpack cpack /usr/bin/cpack3 \
+--slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 \
+--family cmake'
+
 # Generate ssh key to avoid typing password for managment tools and utilities
 rm -f ~/.ssh/id_rsa
 rm -f ~/.ssh/id_rsa.pub

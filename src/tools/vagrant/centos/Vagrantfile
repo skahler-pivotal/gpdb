@@ -17,9 +17,10 @@ require "ipaddr"
 # Vagrant / Ruby doesn't really provide us a nice way of sending flags
 # We could use include and use GetoptLong, but this requires sticking
 # varaiables between vagrant and up
-@build_local = ENV['LOCAL'] || true
-@build_orca = ENV['ORCA'] || true
-@args = []
+@build_on_deploy = ENV['BUILD'] || true   # OS Setup Only - Manual Build / Script Testing (BUILD=false vagrant up)
+@build_local = ENV['LOCAL'] || false      # Use Local Project as Source
+@build_orca = ENV['ORCA'] || true         # Build w/ ORCA
+@build_args = []
 
 # Define a Template for Building All Our VMs.
 # We can leverage this later to handle multiple hosts.
@@ -55,20 +56,17 @@ Vagrant.configure(2) do |config|
   puts "Master IP: #{@vm_ip}"
   build_vm( config, "#{@vm_hostname}", "#{@vm_ip}" )
 
-  if (@build_local == true)
-    config.vm.synced_folder File.expand_path("../../../../", Dir.pwd), "/gpdb"
-    @args.push("--build-local")
-  end
-
+  config.vm.synced_folder File.expand_path("../../../../", Dir.pwd), "/gpdb"
   config.vm.provision "shell", path: "vagrant-setup.sh"
   config.vm.provision "shell", path: "vagrant-configure-os.sh"
 
-  if (@build_orca == true)
-    config.vm.provision "shell", path: "vagrant-build-gporca.sh", privileged: false
-    @args.push("--enable-orca")
+  if ( @build_on_deploy == true ) then
+    @build_args.push("--build-local") if @build_local
+    @build_args.push("--enable-orca") if @build_orca
+    puts "Build Options: #{@build_args.join(" ")}"
+    config.vm.provision "shell", path: "vagrant-build-gpdb.sh", privileged: false, args: "#{@build_args.join(" ")}"
+  else
+    puts "","Environemnt Configuration Complete."
+    puts "Automated Deployment: /vagrant/vagrant-build-gpdb.sh [--enable-orca][--build-local]"
   end
-
-  puts "Build Options: #{@args.join(" ")}"
-  config.vm.provision "shell", path: "vagrant-build-gpdb.sh", privileged: false, args: "#{@args.join(" ")}"
-
 end

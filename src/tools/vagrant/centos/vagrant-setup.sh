@@ -36,19 +36,3 @@ sudo pip install --upgrade paramiko
 sudo pip install --upgrade setuptools
 sudo pip install --upgrade epydoc
 sudo pip install --upgrade pyyaml
-
-# cmake 3.1
-pushd ~
-  wget http://www.cmake.org/files/v3.1/cmake-3.1.0.tar.gz
-  tar -zxvf cmake-3.1.0.tar.gz
-  pushd cmake-3.1.0
-    ./bootstrap
-    make
-    make install
-    export PATH=/usr/local/bin:$PATH
-  popd
-popd
-
-# Misc -- perhaps move to configure-os?
-sudo chown -R vagrant:vagrant /usr/local
-sudo bash -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf'
