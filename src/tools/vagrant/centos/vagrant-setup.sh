@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -x
 
 # install packages needed to build and run GPDB
@@ -50,5 +49,6 @@ pushd ~
   popd
 popd
 
-# Misc
+# Misc -- perhaps move to configure-os?
 sudo chown -R vagrant:vagrant /usr/local
+sudo bash -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf'

@@ -1,6 +1,5 @@
 #!/bin/bash
-
-set -ex
+set -x
 
 # clone the repos
 rm -fr gpos
@@ -8,7 +7,7 @@ rm -fr gp-xerces
 rm -fr gporca
 
 pushd ~
-  git clone https://github.com/greenplum-db/gpos
+  git clone https://github.com/greenplum-db/gpos #-- not required?
   git clone https://github.com/greenplum-db/gp-xerces
   git clone https://github.com/greenplum-db/gporca
 popd

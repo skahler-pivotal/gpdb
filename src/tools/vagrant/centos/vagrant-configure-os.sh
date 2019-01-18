@@ -55,3 +55,17 @@ sudo bash -c 'printf "* hard core unlimited\n"         >> /etc/security/limits.d
 sudo sed -i '/RemoveIPC=no/d' /etc/systemd/logind.conf
 sudo bash -c 'echo "RemoveIPC=no" >> /etc/systemd/logind.conf'
 sudo service systemd-logind restart
+
+# Change Ownership
+sudo chown -R vagrant:vagrant /usr/local
+
+# Update LD_LIBRARY_PATH
+sudo bash -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf'
+sudo bash -c 'ldconfig'
+
+# Generate ssh key to avoid typing password for managment tools and utilities
+rm -f ~/.ssh/id_rsa
+rm -f ~/.ssh/id_rsa.pub
+ssh-keygen -t rsa -N "" -f "$HOME/.ssh/id_rsa"
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
