@@ -1,6 +1,10 @@
 #!/bin/bash
-set -x
+# set -x
+export CC="ccache cc"
+export CXX="ccache c++"
+export PATH=/usr/local/bin:$PATH
 
+# Check Flags
 while [ $# -gt 0 ]; do
   case "$1" in
     --enable-orca)
@@ -17,76 +21,76 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-rm -rf /usr/local/gpdb
-
+# Cleanup
 pushd ~
   rm -fr gpdb
   rm -fr gpos
   rm -fr gp-xerces
   rm -fr gporca
-
-  if [ -z "$build_local" ]; then
-       git clone https://github.com/greenplum-db/gpdb
-  else
-    ln -s /gpdb ~/gpdb
-  fi
+  rm -fr /usr/local/gpdb
 popd
 
-export CC="ccache cc"
-export CXX="ccache c++"
-export PATH=/usr/local/bin:$PATH
+# Build ORCA
+if [ -n "$enable_orca" ]; then
 
-if [ -z "$enable_orca" ]; then
+  printf "\n\nORCA Enabled:\n"
   pushd ~
-    git clone https://github.com/greenplum-db/gpos #-- not required?
     git clone https://github.com/greenplum-db/gp-xerces
     git clone https://github.com/greenplum-db/gporca
   popd
 
-  pushd ~/gpos
-    rm -fr build
-    mkdir build
-    pushd build
-      cmake ../
-      make -j4 && make install
-    popd
-  popd
-
+  printf "\n\nBuilding gp-xerces:\n"
   pushd ~/gp-xerces
-    rm -fr build
     mkdir build
     pushd build
-      ../configure --prefix=/usr/local
-      make -j4 && make install
+      ../configure --prefix=/usr/local  # cmake -G Ninja -H. -B build
+      make -j4 && make install          # ninja-build install -C build
     popd
   popd
 
+  printf "\n\nBuilding gporca:\n"
   pushd ~/gporca
-    rm -fr build
-    mkdir build
-    pushd build
-      cmake ../
-      make -j4 && make install
-    popd
+     git pull --ff-only
+     cmake -G Ninja -H. -B build
+     ninja-build install -C build
   popd
+
+  # Post-Optimizer: Update Shared Libraries
+  sudo bash -c 'ldconfig'
 fi
 
-pushd ~/gpdb
-  ./configure --prefix=/usr/local/gpdb $enable_orca
-  if [ $? -ne 0 ]; then
-    printf "Configure Failed: Exiting"
-    # To-Do: Provide Instructions for Re-run. ? If local fails use git? # Can we git the right verison for local?
-    exit 1;
+# Build GPDB
+pushd ~
+  if [ -n "$build_local" ]; then
+    printf "\n\nBuilding Local: ~/gpdb\n"
+    ln -s /gpdb ~/gpdb
+  else
+    printf "\n\nBuilding Remote: https://github.com/greenplum-db/gpdb\n"
+    git clone https://github.com/greenplum-db/gpdb
   fi
-  make clean
-  make -j4 -s && make install
+
+  # To-Do: Option gcc-6
+  # sudo yum install -y centos-release-scl
+  # sudo yum install -y devtoolset-6-toolchain
+  # echo 'source scl_source enable devtoolset-6' >> ~/.bashrc
+
+  printf "\n\nBuilding gpdb:\n"
+  pushd ~/gpdb
+    ./configure -with-perl --with-python --with-libxml --with-gssapi --prefix=/usr/local/gpdb $enable_orca
+
+    if [ $? -ne 0 ]; then
+      printf "\n\nConfigure Failed: Exiting\n\n"
+      # To-Do: Provide Instructions for Re-run. ? If local fails use git? # Can we git the right verison for local?
+      exit 1;
+    fi
+
+    make clean
+    make -j8 && make -j8 install
+  popd
 popd
 
 # BUG: fix the LD_LIBRARY_PATH to find installed GPOPT libraries -- now in vagrant-configure-os
 # echo export LD_LIBRARY_PATH=/usr/local/lib:\$LD_LIBRARY_PATH >> /usr/local/gpdb/greenplum_path.sh
+# Use gpdemo to start the cluster
 
-# use gpdemo to start the cluster
-pushd ~/gpdb/gpAux/gpdemo
-  source /usr/local/gpdb/greenplum_path.sh
-  make
-popd
+source /usr/local/gpdb/greenplum_path.sh

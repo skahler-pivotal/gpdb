@@ -20,7 +20,7 @@ require "ipaddr"
 @build_on_deploy = ENV['BUILD'] || true   # OS Setup Only - Manual Build / Script Testing (BUILD=false vagrant up)
 @build_local = ENV['LOCAL'] || false      # Use Local Project as Source
 @build_orca = ENV['ORCA'] || true         # Build w/ ORCA
-@build_args = []
+@build_args = []                          # Push build arguments into the array
 
 # Define a Template for Building All Our VMs.
 # We can leverage this later to handle multiple hosts.
@@ -66,7 +66,6 @@ Vagrant.configure(2) do |config|
     puts "Build Options: #{@build_args.join(" ")}"
     config.vm.provision "shell", path: "vagrant-build-gpdb.sh", privileged: false, args: "#{@build_args.join(" ")}"
   else
-    puts "","Environemnt Configuration Complete."
-    puts "Automated Deployment: /vagrant/vagrant-build-gpdb.sh [--enable-orca][--build-local]"
+    config.vm.post_up_message "Manual Deployment: /vagrant/vagrant-build-gpdb.sh [--enable-orca][--build-local]"
   end
 end
