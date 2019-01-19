@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 
 # Stop firewall
 sudo systemctl stop firewalld

@@ -67,6 +67,7 @@ pushd ~
   else
     printf "\n\nBuilding Remote: https://github.com/greenplum-db/gpdb\n"
     git clone https://github.com/greenplum-db/gpdb
+    git pull --ff-only
   fi
 
   # To-Do: Option gcc-6
